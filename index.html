@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>3D Task Manager</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-light: #818cf8;
+      --primary-dark: #4338ca;
+      --success: #10b981;
+      --danger: #ef4444;
+      --text: #1f2937;
+      --text-light: #6b7280;
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
+      --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.05);
+      --card-shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-light));
+      --button-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3), 0 2px 4px -1px rgba(79, 70, 229, 0.2);
+    }
+
+```
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: var(--bg);
+  color: navajowhite;
+  line-height: 1.6;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  perspective: 1000px;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 500px;
+  perspective: 1000px;
+  margin-top: 20px;
+  position: relative;
+}
+
+header {
+  position: relative;
+  text-align: center;
+  margin-bottom: 30px;
+  transform-style: preserve-3d;
+}
+
+h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transform: translateZ(30px);
+  letter-spacing: -0.5px;
+  position: relative;
+  text-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  animation: float 3s ease-in-out infinite;
+}
+
+h1::after {
+  content: "3D";
+  position: absolute;
+  bottom: -8px;
+  right: -12px;
+  font-size: 1rem;
+  font-weight: bold;
+  background: var(--primary-dark);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transform: translateZ(10px) rotate(5deg);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.main-card {
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transform: rotateX(2deg) rotateY(0deg);
+  transition: all 0.4s ease;
+  animation: appear 0.8s ease forwards;
+}
+
+.main-card:hover {
+  box-shadow: var(--card-shadow-hover);
+  transform: rotateX(0deg) rotateY(0deg) translateZ(10px);
+}
+
+.task-form {
+  display: flex;
+  padding: 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  position: relative;
+}
+
+.task-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient);
+}
+
+#taskInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 16px;
+  color: var(--text);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+#taskInput:focus {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+}
+
+#addTaskBtn {
+  background: var(--gradient);
+  color: white;
+  border: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  margin-left: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: var(--button-shadow);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
+  transform: translateZ(2px);
+  transition: all 0.2s ease;
+}
+
+#addTaskBtn:hover {
+  transform: translateZ(4px) translateY(-2px);
+  box-shadow: 0 6px 10px -2px rgba(79, 70, 229, 0.4);
+}
+
+#addTaskBtn:active {
+  transform: translateZ(0px) translateY(0px);
+  box-shadow: var(--button-shadow);
+}
+
+.filters {
+  display: flex;
+  padding: 0 20px;
+  justify-content: center;
+  margin: 15px 0;
+  position: relative;
+  z-index: 10;
+}
+
+.filter-btn {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  margin: 0 5px;
+  font-size: 15px;
+  color: var(--text-light);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+}
+
+.filter-btn::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 3px;
+  background: var(--gradient);
+  transition: width 0.3s ease;
+  border-radius: 1.5px;
+}
+
+.filter-btn.active {
+  color: var(--primary);
+}
+
+.filter-btn.active::before {
+  width: 70%;
+}
+
+.filter-btn:hover::before {
+  width: 30%;
+}
+
+.task-list-container {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 0 20px;
+  perspective: 600px;
+  transform-style: preserve-3d;
+}
+
+.task-list-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.task-list-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.task-list-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.task-list-container::-webkit-scrollbar-thumb:hover {
+  background: #c1c1c1;
+}
+
+#todoList {
+  list-style-type: none;
+  padding: 5px 0 15px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  margin: 12px 0;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transform-style: preserve-3d;
+  transform: translateZ(0px);
+  transition: all 0.3s ease;
+  position: relative;
+  animation: slideIn 0.5s ease forwards;
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.todo-item:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  transform: translateZ(5px) translateY(-2px);
+}
+
+.todo-item.deleting {
+  animation: slideOut 0.5s ease forwards;
+}
+
+.checkbox-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 26px;
+  width: 26px;
+  background-color: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.custom-checkbox:checked {
+  border-color: var(--success);
+  background-color: var(--success);
+  animation: checkmark 0.4s ease forwards;
+}
+
+.custom-checkbox:checked::before {
+  content: "✓";
+  position: absolute;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  animation: fadeIn 0.4s ease;
+}
+
+.task-text {
+  flex: 1;
+  color: var(--text);
+  font-weight: 500;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  transform-origin: left;
+  word-break: break-word;
+  padding-right: 10px;
+}
+
+.todo-item.completed .task-text {
+  color: var(--text-light);
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  height: 36px;
+  width: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.3s ease;
+  transform: translateZ(2px);
+}
+
+.delete-btn::before {
+  content: "×";
+  position: absolute;
+  font-size: 22px;
+  color: var(--danger);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.delete-btn:hover::before {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.task-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-top: 1px solid rgba(0,0,0,0.05);
+}
+
+#itemsLeft {
+  font-size: 14px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+#clearCompleted {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+#clearCompleted:hover {
+  color: var(--danger);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.empty-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  color: var(--text-light);
+  text-align: center;
+  animation: fadeIn 1s ease;
+}
+
+.empty-icon {
+  font-size: 40px;
+  color: #d1d5db;
+  margin-bottom: 15px;
+  animation: float 3s ease-in-out infinite;
+}
+
+.empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text);
+}
+
+.empty-subtitle {
+  font-size: 14px;
+}
+
+.instagram-banner {
+  margin-top: 30px;
+  padding: 20px;
+  background: var(--gradient);
+  border-radius: 12px;
+  text-align: center;
+  color: white;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+  transform-style: preserve-3d;
+  transform: translateZ(10px);
+  transition: all 0.3s ease;
+  animation: appear 0.8s ease forwards 0.2s;
+  opacity: 0;
+}
+
+.instagram-banner:hover {
+  transform: translateZ(20px) translateY(-5px);
+  box-shadow: 0 15px 30px rgba(79, 70, 229, 0.4);
+}
+
+.instagram-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.instagram-button {
+  display: inline-block;
+  background-color: white;
+  color: var(--primary);
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 10px 0;
+  transition: all 0.3s ease;
+  transform: translateZ(5px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.instagram-button:hover {
+  transform: translateZ(10px) translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.instagram-subtitle {
+  opacity: 0.9;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.insta-icon {
+  margin-right: 8px;
+}
+
+/* Confetti Animation */
+.confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: #f00;
+  border-radius: 0;
+  animation: confetti-fall 3s linear infinite, confetti-shake 2s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0) translateZ(30px); }
+  50% { transform: translateY(-10px) translateZ(30px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: translateZ(10px) rotate(5deg) scale(1); }
+  50% { transform: translateZ(10px) rotate(5deg) scale(1.05); }
+}
+
+@keyframes appear {
+  0% { opacity: 0; transform: translateY(20px) rotateX(10deg); }
+  100% { opacity: 1; transform: translateY(0) rotateX(2deg); }
+}
+
+@keyframes slideIn {
+  0% { opacity: 0; transform: translateX(-20px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(50px); }
+}
+
+@keyframes checkmark {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes confetti-fall {
+  0% { top: -10%; }
+  100% { top: 100%; }
+}
+
+@keyframes confetti-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  25% { transform: translateX(10px) rotate(90deg); }
+  50% { transform: translateX(-5px) rotate(180deg); }
+  75% { transform: translateX(10px) rotate(270deg); }
+}
+
+/* 3D Tilt Effect */
+.tilt-card {
+  transform-style: preserve-3d;
+  transform: perspective(1000px);
+  transition: transform 0.1s ease;
+}
+
+.tilt-content {
+  transform-style: preserve-3d;
+}
+
+.floating {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Responsive Design */
+@media (max-width: 550px) {
+  body {
+    padding: 15px 10px;
+  }
+  
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .filter-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .todo-item {
+    padding: 14px;
+  }
+
+  .custom-checkbox {
+    height: 24px;
+    width: 24px;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    margin-top: 50px;
+  }
+}
+```
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="tilt-card">
+      <h1 class="tilt-content">Task Manager</h1>
+    </header>
+
+```
+<div class="main-card tilt-card">
+  <div class="task-form">
+    <input type="text" id="taskInput" placeholder="What needs to be done?" autocomplete="off">
+    <button id="addTaskBtn"><i class="fas fa-plus"></i></button>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="active">Active</button>
+    <button class="filter-btn" data-filter="completed">Completed</button>
+  </div>
+
+  <div class="task-list-container">
+    <ul id="todoList">
+      <!-- Tasks will be added here dynamically -->
+    </ul>
+  </div>
+
+  <div class="task-actions">
+    <span id="itemsLeft">0 items left</span>
+    <button id="clearCompleted">Clear completed</button>
+  </div>
+</div>
+
+<!-- Instagram Banner -->
+<div class="instagram-banner tilt-card">
+  <div class="instagram-title">⭐ FOLLOW FOR MORE CONTENT ⭐</div>
+  <a href="https://www.instagram.com/the_developer_45?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" class="instagram-button">
+    <i class="fab fa-instagram insta-icon"></i>DEVELOPERS AURA
+  </a>
+  <div class="instagram-subtitle">For more awesome content like this!</div>
+</div>
+```
+
+  </div>
+
+  <div class="confetti-container" id="confettiContainer"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // DOM elements
+      const taskInput = document.getElementById('taskInput');
+      const addTaskBtn = document.getElementById('addTaskBtn');
+      const todoList = document.getElementById('todoList');
+      const itemsLeft = document.getElementById('itemsLeft');
+      const clearCompletedBtn = document.getElementById('clearCompleted');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const confettiContainer = document.getElementById('confettiContainer');
+      
+      // Apply 3D tilt effect to cards
+      const tiltCards = document.querySelectorAll('.tilt-card');
+      
+      tiltCards.forEach(card => {
+        card.addEventListener('mousemove', function(e) {
+          if (window.innerWidth <= 768) return; // Disable on mobile
+          
+          const rect = this.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const xPercent = (x / rect.width - 0.5) * 2; // -1 to 1
+          const yPercent = (y / rect.height - 0.5) * 2; // -1 to 1
+          
+          const rotateX = yPercent * -5;
+          const rotateY = xPercent * 5;
+          
+          this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+        
+        card.addEventListener('mouseleave', function() {
+          this.style.transform = '';
+        });
+      });
+      
+      // Current filter
+      let currentFilter = 'all';
+      
+      // Load tasks from localStorage
+      let tasks = JSON.parse(localStorage.getItem('3dTasks')) || [];
+      
+      // Initialize the app
+      renderTasks();
+      updateItemsLeft();
+      
+      // Add new task
+      addTaskBtn.addEventListener('click', addTask);
+      taskInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          addTask();
+        }
+      });
+      
+      // Clear completed tasks
+      clearCompletedBtn.addEventListener('click', clearCompleted);
+      
+      // Filter tasks
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          currentFilter = this.getAttribute('data-filter');
+          renderTasks();
+        });
+      });
+      
+      function addTask() {
+        const text = taskInput.value.trim();
+        if (text === '') return;
+        
+        const newTask = {
+          id: Date.now(),
+          text: text,
+          completed: false,
+          createdAt: new Date()
+        };
+        
+        tasks.unshift(newTask);
+        saveToLocalStorage();
+        renderTasks();
+        updateItemsLeft();
+        
+        taskInput.value = '';
+        taskInput.focus();
+        
+        // Adding a cool animation delay for the new task
+        setTimeout(() => {
+          const firstTask = todoList.querySelector('.todo-item');
+          if (firstTask) {
+            firstTask.style.opacity = '1';
+            firstTask.style.transform = 'translateX(0)';
+          }
+        }, 50);
+      }
+      
+      function renderTasks() {
+        todoList.innerHTML = '';
+        
+        const filteredTasks = tasks.filter(task => {
+          if (currentFilter === 'active') return !task.completed;
+          if (currentFilter === 'completed') return task.completed;
+          return true;
+        });
+        
+        if (filteredTasks.length === 0) {
+          todoList.innerHTML = `
+            <li class="empty-message">
+              <i class="fas fa-clipboard-list empty-icon"></i>
+              <p class="empty-title">No tasks to display</p>
+              <p class="empty-subtitle">Add a new task to get started</p>
+            </li>
+          `;
+          return;
+        }
+        
+        filteredTasks.forEach((task, index) => {
+          const li = document.createElement('li');
+          li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+          li.style.animationDelay = `${index * 0.05}s`;
+          li.innerHTML = `
+            <div class="checkbox-wrapper">
+              <input type="checkbox" class="custom-checkbox" data-id="${task.id}" ${task.completed ? 'checked' : ''}>
+            </div>
+            <span class="task-text">${task.text}</span>
+            <button class="delete-btn" data-id="${task.id}"></button>
+          `;
+          todoList.appendChild(li);
+          
+          // Add event listeners for toggling and deleting
+          const checkbox = li.querySelector('.custom-checkbox');
+          checkbox.addEventListener('change', () => toggleTask(task.id));
+          
+          const deleteBtn = li.querySelector('.delete-btn');
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            li.classList.add('deleting');
+            setTimeout(() => {
+              deleteTask(task.id);
+            }, 300);
+          });
+        });
+      }
+      
+      function toggleTask(id) {
+        let wasCompleted = false;
+        
+        tasks = tasks.map(task => {
+          if (task.id === id) {
+            wasCompleted = task.completed;
+            return { ...task, completed: !task.completed };
+          }
+          return task;
+        });
+        
+        // Only celebrate when completing a task, not uncompleting
+        if (!wasCompleted) {
+          createConfetti();
+        }
+        
+        saveToLocalStorage();
+        renderTasks();
+        updateItemsLeft();
+      }
+      
+      function deleteTask(id) {
+        tasks = tasks.filter(task => task.id !== id);
+        saveToLocalStorage();
+        renderTasks();
+        updateItemsLeft();
+      }
+      
+      function clearCompleted() {
+        if (!tasks.some(task => task.completed)) return;
+        
+        tasks = tasks.filter(task => !task.completed);
+        saveToLocalStorage();
+        renderTasks();
+        updateItemsLeft();
+      }
+      
+      function updateItemsLeft() {
+        const activeTasks = tasks.filter(task => !task.completed).length;
+        itemsLeft.textContent = `${activeTasks} ${activeTasks === 1 ? 'item' : 'items'} left`;
+      }
+      
+      function saveToLocalStorage() {
+        localStorage.setItem('3dTasks', JSON.stringify(tasks));
+      }
+      
+      // Create confetti celebration when completing a task
+      function createConfetti() {
+        const colors = ['#4f46e5', '#818cf8', '#10b981', '#f472b6', '#f59e0b', '#ef4444'];
+        
+        for (let i = 0; i < 30; i++) {
+          const confetti = document.createElement('div');
+          confetti.className = 'confetti';
+          
+          // Random position, color, size, and animation delay
+          const leftPos = Math.random() * 100;
+          const size = Math.random() * 10 + 5;
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          const delay = Math.random() * 1.5;
+          const duration = Math.random() * 3 + 2;
+          
+          confetti.style.left = `${leftPos}%`;
+          confetti.style.width = `${size}px`;
+          confetti.style.height = `${size}px`;
+          confetti.style.backgroundColor = color;
+          confetti.style.animationDelay = `${delay}s`;
+          confetti.style.animationDuration = `${duration}s`;
+          
+          // Set random shapes
+          if (Math.random() > 0.5) {
+            confetti.style.borderRadius = '50%';
+          } else if (Math.random() > 0.5) {
+            confetti.style.borderRadius = '1px';
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+          } else {
+            confetti.style.width = `${size / 2}px`;
+            confetti.style.height = `${size}px`;
+            confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+          }
+          
+          confettiContainer.appendChild(confetti);
+          
+          // Remove confetti after animation ends
+          setTimeout(() => {
+            confetti.remove();
+          }, duration * 1000 + delay * 1000);
+        }
+      }
+      
+      // Mobile touch optimizations
+      document.addEventListener('touchstart', function(){}, {passive: true});
+      
+      // Handle visibility changes
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible') {
+          tasks = JSON.parse(localStorage.getItem('3dTasks')) || [];
+          renderTasks();
+          updateItemsLeft();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html> 
